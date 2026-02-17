@@ -5,11 +5,12 @@
 <div id="container">
 	<video
 		id="hero-video"
-		src="https://res.cloudinary.com/dstaxkfml/video/upload/v1769707651/22370-vmake_h4mfr3.webm"
+		data-video-src="https://res.cloudinary.com/dstaxkfml/video/upload/f_auto,q_auto:low/22370-vmake_h4mfr3.webm"
 		autoplay
 		muted
 		loop
 		playsinline
+		preload="none"
 	></video>
 	<div id="hero-scrim" aria-hidden="true"></div>
 	<header id="hero-content">
@@ -28,16 +29,11 @@
 
 <style is:global>
 	#container {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		width: 100vw;
-		height: 100vh;
-		min-width: 100%;
-		min-height: 100%;
+		position: relative;
+		width: 100%;
+		min-height: 100vh;
 		overflow: hidden;
+		contain: layout paint;
 	}
 
 	#hero-video {
@@ -51,6 +47,8 @@
 		object-fit: cover;
 		object-position: center;
 		display: block;
+		transform: translateZ(0);
+		backface-visibility: hidden;
 	}
 
 	/* Scrim: strong left so text is always readable over video; video position untouched */
@@ -208,3 +206,67 @@
 		}
 	}
 </style>
+
+<script>
+	const CACHE_NAME = 'hero-video-v1';
+	const video = document.getElementById('hero-video');
+	const videoUrl = video?.getAttribute('data-video-src');
+	if (!video || !videoUrl) throw new Error('Hero video element or URL missing');
+
+	function setVideoSourceFromBlob(blob) {
+		const blobUrl = URL.createObjectURL(blob);
+		video.src = blobUrl;
+		video.load();
+		video.play().catch(() => {});
+		// Revoke blob URL when video can play through (optional, or on unload)
+		video.addEventListener('canplaythrough', () => URL.revokeObjectURL(blobUrl), { once: true });
+	}
+
+	function loadVideo() {
+		// Prefer Cache API so we don't re-download on next visit
+		const tryCache = async () => {
+			try {
+				const cache = await caches.open(CACHE_NAME);
+				const cached = await cache.match(videoUrl);
+				if (cached) {
+					const blob = await cached.blob();
+					setVideoSourceFromBlob(blob);
+					return;
+				}
+			} catch {
+				// Cache not available (e.g. private mode), fall through to fetch
+			}
+			const res = await fetch(videoUrl);
+			const blob = await res.blob();
+			try {
+				const cache = await caches.open(CACHE_NAME);
+				await cache.put(videoUrl, new Response(blob, { headers: res.headers }));
+			} catch {
+				// Ignore cache write errors
+			}
+			setVideoSourceFromBlob(blob);
+		};
+		if ('requestIdleCallback' in window) {
+			window.requestIdleCallback(() => tryCache(), { timeout: 1500 });
+		} else {
+			setTimeout(() => tryCache(), 300);
+		}
+	}
+
+	loadVideo();
+
+	// Pause video when off-screen to reduce scroll lag and CPU/GPU usage
+	const observer = new IntersectionObserver(
+		(entries) => {
+			const e = entries[0];
+			if (!e || !video) return;
+			if (e.isIntersecting) {
+				video.play().catch(() => {});
+			} else {
+				video.pause();
+			}
+		},
+		{ rootMargin: '20% 0px', threshold: 0 }
+	);
+	observer.observe(video);
+</script>

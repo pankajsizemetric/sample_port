@@ -1,0 +1,318 @@
+---
+const PROJECTS = [
+  { id: "p1", tag: "PROJECT", meta: "#01 · UI / Frontend", title: "Layered Cards UI", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed commodo, arcu nec elementum congue, risus orci maximus ipsum, vel suscipit sem magna non urna. Integer vel purus a tortor varius condimentum.", tech: ["HTML", "CSS", "JavaScript", "UI"], snippet: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor." },
+  { id: "p2", tag: "PROJECT", meta: "#02 · Portfolio", title: "Minimal Portfolio Grid", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi feugiat, neque at dapibus posuere, mi nulla viverra arcu, ut malesuada justo ipsum at libero.", tech: ["Layout", "Accessibility", "Responsive"], snippet: "Lorem ipsum dolor sit amet. Consectetur adipiscing elit, sed do eiusmod." },
+  { id: "p3", tag: "PROJECT", meta: "#03 · Landing Page", title: "Product Landing Hero", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sit amet est at urna iaculis aliquet. Vestibulum ante ipsum primis in faucibus.", tech: ["Hero", "CTA", "Motion"], snippet: "Lorem ipsum dolor sit amet, consectetur adipiscing. Ut enim ad minim." },
+  { id: "p4", tag: "PROJECT", meta: "#04 · Dashboard", title: "Stats Dashboard Widgets", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sit amet nisi vitae ipsum aliquet interdum. Quisque ultricies, justo vel.", tech: ["Charts", "Cards", "States"], snippet: "Lorem ipsum dolor sit amet. Aenean sit amet nisi vitae ipsum aliquet." },
+  { id: "p5", tag: "PROJECT", meta: "#05 · E‑commerce", title: "Product Detail Page", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam a risus nec urna pulvinar viverra. Donec sagittis, eros a dignissim varius.", tech: ["PDP", "Gallery", "Variants"], snippet: "Lorem ipsum dolor sit amet, consectetur. Etiam a risus nec urna." },
+  { id: "p6", tag: "PROJECT", meta: "#06 · Animation", title: "Hover Micro‑interactions", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus at purus a odio dignissim feugiat. Praesent tristique, lectus sit amet.", tech: ["Hover", "Easing", "Delight"], snippet: "Lorem ipsum dolor sit amet. Vivamus at purus a odio dignissim feugiat." },
+  { id: "p7", tag: "PROJECT", meta: "#07 · Components", title: "Reusable Card System", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed id orci nec elit tristique laoreet. Nam bibendum, mi id.", tech: ["Components", "Tokens", "Consistency"], snippet: "Lorem ipsum dolor sit amet. Sed id orci nec elit tristique laoreet." },
+  { id: "p8", tag: "PROJECT", meta: "#08 · Case Study", title: "End‑to‑end Case Study", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut at augue sed urna pulvinar molestie. Aliquam erat volutpat. Integer.", tech: ["Research", "UX", "Delivery"], snippet: "Lorem ipsum dolor sit amet. Ut at augue sed urna pulvinar molestie." },
+];
+
+const POSITIONS = [
+  { top: "6%", left: "6%", rot: "-8deg", z: 2 },
+  { top: "12%", left: "26%", rot: "6deg", z: 3 },
+  { top: "22%", left: "12%", rot: "-3deg", z: 4 },
+  { top: "30%", left: "32%", rot: "10deg", z: 5 },
+  { top: "40%", left: "10%", rot: "-10deg", z: 6 },
+  { top: "50%", left: "30%", rot: "2deg", z: 7 },
+  { top: "58%", left: "14%", rot: "-2deg", z: 8 },
+  { top: "64%", left: "34%", rot: "8deg", z: 9 },
+];
+---
+
+<section class="projects-section" id="projects" aria-label="Projects">
+  <div class="projects-page">
+    <div class="projects-layout" aria-label="Projects layout">
+      <aside class="projects-left" aria-label="Project collage">
+        <div class="collage" id="projectsCollage" aria-label="Project cards">
+          {PROJECTS.map((p, idx) => {
+            const pos = POSITIONS[idx] ?? POSITIONS[POSITIONS.length - 1];
+            return (
+              <button
+                type="button"
+                class="card"
+                style={`top: ${pos.top}; left: ${pos.left}; z-index: ${pos.z}; --rot: ${pos.rot}; transform: rotate(${pos.rot}) translate3d(0,0,0);`}
+                data-rot={pos.rot}
+                aria-label={`${p.title} — open details`}
+                data-project-index={idx}
+              >
+                <div class="card__header">{p.title.toUpperCase()}</div>
+                <div class="card__body">{p.snippet || "Lorem ipsum dolor sit amet, consectetur adipiscing elit."}</div>
+              </button>
+            );
+          })}
+        </div>
+      </aside>
+      <section class="projects-right" aria-label="Project details">
+        <div class="side-slot" id="projectsSideSlot" aria-label="Selected card slot"></div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<script define:vars={{ PROJECTS }}>
+  (function () {
+    const ANIM_MS = 520;
+    const EASE_OUT = "cubic-bezier(0.22, 1, 0.36, 1)";
+    let activeCard = null;
+    let activeProject = null;
+    const homeMap = new WeakMap();
+
+    function animateFLIP(node, firstRect, lastRect, fromRotDeg, toRotDeg) {
+      const dx = firstRect.left - lastRect.left;
+      const dy = firstRect.top - lastRect.top;
+      const sx = firstRect.width / lastRect.width;
+      const sy = firstRect.height / lastRect.height;
+      node.classList.add("is-animating");
+      const from = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(${fromRotDeg}deg)`;
+      const to = `translate(0px, 0px) scale(1, 1) rotate(${toRotDeg}deg)`;
+      const anim = node.animate([{ transform: from }, { transform: to }], { duration: ANIM_MS, easing: EASE_OUT, fill: "both" });
+      anim.addEventListener("finish", () => {
+        node.classList.remove("is-animating");
+        if (node.classList.contains("is-in-slot")) {
+          node.style.transform = "none";
+        } else {
+          const home = homeMap.get(node);
+          node.style.transform = home?.transform ?? (toRotDeg === 0 ? "none" : `rotate(${toRotDeg}deg)`);
+        }
+      });
+    }
+
+    function selectCard(card, project) {
+      const sideSlot = document.getElementById("projectsSideSlot");
+      const collage = document.getElementById("projectsCollage");
+      if (!sideSlot || !collage) return;
+      if (activeCard === card) {
+        clearSelection();
+        return;
+      }
+      if (activeCard) clearSelection(false);
+      if (!homeMap.has(card)) {
+        homeMap.set(card, {
+          parent: collage,
+          top: card.style.top,
+          left: card.style.left,
+          zIndex: card.style.zIndex,
+          transform: card.style.transform,
+          rot: card.dataset.rot || "0",
+        });
+      }
+      const home = homeMap.get(card);
+      const fromRotDeg = Number.parseFloat((home?.rot || "0").replace("deg", "")) || 0;
+      const first = card.getBoundingClientRect();
+      card.classList.add("is-in-slot", "is-active");
+      card.style.top = "";
+      card.style.left = "";
+      card.style.zIndex = "10";
+      card.style.transform = "none";
+      sideSlot.appendChild(card);
+      const last = card.getBoundingClientRect();
+      animateFLIP(card, first, last, fromRotDeg, 0);
+      activeCard = card;
+      activeProject = project;
+    }
+
+    function clearSelection(skipAnimate) {
+      if (!activeCard) return;
+      const card = activeCard;
+      activeCard = null;
+      activeProject = null;
+      document.querySelectorAll(".projects-section .card.is-active").forEach((n) => n.classList.remove("is-active"));
+      const home = homeMap.get(card);
+      if (!home?.parent) return;
+      const toRotDeg = Number.parseFloat(String(home.rot || "0").replace("deg", "")) || 0;
+      const first = card.getBoundingClientRect();
+      card.classList.remove("is-in-slot");
+      home.parent.appendChild(card);
+      card.style.top = home.top;
+      card.style.left = home.left;
+      card.style.zIndex = home.zIndex;
+      card.style.transform = home.transform;
+      card.dataset.rot = String(home.rot || "0");
+      const last = card.getBoundingClientRect();
+      if (!skipAnimate) animateFLIP(card, first, last, 0, toRotDeg);
+    }
+
+    document.querySelectorAll(".projects-section .card").forEach((card, idx) => {
+      const project = PROJECTS[idx];
+      if (!project) return;
+      card.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectCard(card, project);
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      const t = e.target;
+      if (!(t instanceof Element)) return;
+      if (t.closest(".projects-section .card")) return;
+      if (t.closest("#projectsSideSlot")) return;
+      clearSelection();
+    });
+  })();
+</script>
+
+<style>
+  .projects-section {
+    --projects-bg: #f5f5f5;
+    --projects-ink: #0a0a0a;
+    --projects-muted: rgba(0, 0, 0, 0.65);
+    --projects-line: rgba(0, 0, 0, 0.2);
+    --projects-paper: #ffffff;
+    --projects-shadow-1: 0 18px 35px rgba(0, 0, 0, 0.18);
+    --projects-shadow-2: 0 45px 90px rgba(0, 0, 0, 0.13);
+    --projects-radius: 18px;
+    --projects-radius-lg: 22px;
+    background: var(--projects-bg);
+    color: var(--projects-ink);
+    font-family: "Courier Prime", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    letter-spacing: 0.2px;
+    padding-top: clamp(2.5rem, 6vw, 4rem);
+  }
+
+  .projects-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 18px 18px 42px;
+  }
+
+  .projects-layout {
+    display: grid;
+    grid-template-columns: 0.9fr 0.85fr;
+    gap: 28px;
+    align-items: start;
+    padding: 18px 0;
+  }
+
+  .projects-left {
+    position: relative;
+    min-height: 560px;
+    padding-right: 10px;
+  }
+
+  .projects-right {
+    padding-left: 10px;
+  }
+
+  .side-slot {
+    width: 100%;
+    margin: 6px 0 14px;
+  }
+
+  .side-slot:empty {
+    display: none;
+  }
+
+  .projects-section .card.is-in-slot {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    z-index: 10;
+  }
+
+  .projects-section .card.is-animating {
+    will-change: transform;
+  }
+
+  .collage {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    height: min(520px, 60vh);
+    min-height: 460px;
+    margin-top: 6px;
+    margin-left: 8px;
+    transform-style: preserve-3d;
+  }
+
+  .projects-section .card {
+    position: absolute;
+    width: clamp(240px, 44vw, 420px);
+    min-height: 120px;
+    aspect-ratio: 16 / 10;
+    border-radius: var(--projects-radius-lg);
+    border: 2px solid var(--projects-ink);
+    background: var(--projects-paper);
+    overflow: hidden;
+    box-shadow: var(--projects-shadow-1);
+    cursor: pointer;
+    z-index: 1;
+    transform-origin: 20% 20%;
+    transition: transform 220ms ease, box-shadow 220ms ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .projects-section .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.5), transparent 45%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .card__header {
+    padding: 12px 14px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    color: var(--projects-ink);
+  }
+
+  .card__body {
+    padding: 10px 14px 14px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--projects-ink);
+    opacity: 0.9;
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .projects-section .card:hover {
+    transform: translate3d(0, -6px, 10px) scale(1.01) rotate(var(--rot));
+    box-shadow: 0 26px 55px rgba(0, 0, 0, 0.22);
+  }
+
+  .projects-section .card.is-active {
+    outline: 3px solid var(--projects-ink);
+    outline-offset: 3px;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.25);
+  }
+
+  @media (max-width: 980px) {
+    .projects-layout {
+      grid-template-columns: 1fr;
+    }
+    .projects-left {
+      border-right: none;
+      padding-right: 0;
+      border-bottom: 2px solid var(--projects-ink);
+      padding-bottom: 18px;
+      margin-bottom: 18px;
+      min-height: 520px;
+    }
+    .projects-right {
+      padding-left: 0;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .collage {
+      height: 520px;
+      min-height: 520px;
+      margin-left: 0;
+    }
+    .projects-section .card {
+      width: 86vw;
+    }
+  }
+</style>
