@@ -1,5 +1,8 @@
 ---
-// About me section — matches clairneal.co.uk/cn-about layout and sample.html styling
+/**
+ * AboutMe — Intro + background copy and links.
+ * Uses global theme vars from src/styles/theme.css (--color-bg, --color-ink, --color-link).
+ */
 ---
 
 <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/pp-neue-montreal" />
@@ -50,9 +53,10 @@
 </section>
 
 <style>
+  /* Section uses central theme; no hardcoded hex. */
   .about-section {
-    background: #fbfbfb;
-    color: #000000;
+    background: var(--color-bg);
+    color: var(--color-ink);
   }
 
   .about-page {
@@ -69,7 +73,7 @@
     font-size: 2.78rem;
     line-height: 3.33rem;
     letter-spacing: 0;
-    color: #000000;
+    color: var(--color-ink);
   }
 
   .about-paragraph {
@@ -77,7 +81,7 @@
     max-width: 65ch;
     font-size: 1rem;
     line-height: 1.67rem;
-    color: #000000;
+    color: var(--color-ink);
   }
 
   .about-paragraph--spaced {
@@ -92,20 +96,20 @@
 
   .about-sep {
     margin: 0 0.4rem;
-    color: #000000;
+    color: var(--color-ink);
   }
 
   .about-link {
-    color: #0000ff;
+    color: var(--color-link);
     text-decoration: underline;
   }
 
   .about-link:hover,
   .about-link:focus-visible {
-    color: #0000cc;
+    color: var(--color-link-hover);
   }
 
-  /* Single column: Background as heading + stacked paragraphs (same as screenshot) */
+  /* Background subsection: heading + stacked paragraphs */
   .about-background {
     margin-top: 3.5rem;
     padding-top: 0.5rem;
@@ -117,7 +121,7 @@
     font-size: 1.33rem;
     line-height: 1.4;
     letter-spacing: 0;
-    color: #000000;
+    color: var(--color-ink);
   }
 
   .about-background-text {
@@ -125,7 +129,7 @@
     max-width: 65ch;
     font-size: 1rem;
     line-height: 1.67rem;
-    color: #000000;
+    color: var(--color-ink);
   }
 
   @media screen and (max-width: 768px) {

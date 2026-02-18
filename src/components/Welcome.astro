@@ -1,5 +1,8 @@
 ---
-// Hero: full-screen video + overlay content (video position unchanged)
+/**
+ * Welcome — Hero with full-screen video, overlay copy, and CTA buttons.
+ * Uses theme vars for background and text; video loads lazily and plays when in view.
+ */
 ---
 
 <div id="container">
@@ -28,13 +31,14 @@
 </div>
 
 <style is:global>
+	/* Hero container: theme background so it respects light/dark */
 	#container {
 		position: relative;
 		width: 100%;
 		min-height: 100vh;
 		overflow: hidden;
 		contain: layout paint;
-		background: #fff;
+		background: var(--color-paper);
 	}
 
 	#hero-video {
@@ -81,7 +85,7 @@
 		font-size: 1rem;
 		font-weight: 600;
 		letter-spacing: 0.02em;
-		color: #0a0a0a;
+		color: var(--color-ink);
 	}
 
 	#hero-main {
@@ -94,7 +98,7 @@
 		font-weight: 500;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
-		color: #0a0a0a;
+		color: var(--color-ink);
 	}
 
 	.hero-headline {
@@ -103,14 +107,14 @@
 		font-weight: 600;
 		line-height: 1.15;
 		letter-spacing: -0.025em;
-		color: #0a0a0a;
+		color: var(--color-ink);
 	}
 
 	.hero-description {
 		margin: 0 0 1.625rem 0;
 		font-size: 0.9375rem;
 		line-height: 1.65;
-		color: #0a0a0a;
+		color: var(--color-ink);
 	}
 
 	.hero-actions {
@@ -134,20 +138,20 @@
 
 	.btn-primary {
 		background: transparent;
-		color: #0a0a0a;
+		color: var(--color-ink);
 		border: none;
 	}
 
 	.btn-secondary {
 		background: transparent;
-		color: #0a0a0a;
+		color: var(--color-ink);
 		border: none;
 	}
 
-	/* Mobile: top row — Pankaj Sharma (left), Python Developer block (right); video unchanged underneath */
+	/* Mobile: top row — name left, block right; video scaled underneath */
 	@media screen and (max-width: 768px) {
 		#container {
-			background: #fff;
+			background: var(--color-paper);
 		}
 		#hero-video {
 			object-fit: cover;
@@ -183,6 +187,7 @@
 	}
 </style>
 
+<!-- Lazy-load hero video (Cache API when possible); play when in view, pause when not -->
 <script>
 	const CACHE_NAME = 'hero-video-v1';
 	const videoEl = document.getElementById('hero-video') as HTMLVideoElement | null;

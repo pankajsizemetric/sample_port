@@ -1,4 +1,9 @@
 ---
+/**
+ * Projects — Collage of project cards + side slot; Projects | Case Study tabs.
+ * Section vars (--projects-*) alias global theme in theme.css for consistency.
+ * For central content later, consider moving PROJECTS to src/data/projects.ts.
+ */
 const PROJECTS = [
   { id: "p1", tag: "PROJECT", meta: "#01 · UI / Frontend", title: "Layered Cards UI", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed commodo, arcu nec elementum congue, risus orci maximus ipsum, vel suscipit sem magna non urna. Integer vel purus a tortor varius condimentum.", tech: ["HTML", "CSS", "JavaScript", "UI"], snippet: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor." },
   { id: "p2", tag: "PROJECT", meta: "#02 · Portfolio", title: "Minimal Portfolio Grid", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi feugiat, neque at dapibus posuere, mi nulla viverra arcu, ut malesuada justo ipsum at libero.", tech: ["Layout", "Accessibility", "Responsive"], snippet: "Lorem ipsum dolor sit amet. Consectetur adipiscing elit, sed do eiusmod." },
@@ -64,6 +69,7 @@ const POSITIONS = [
   </div>
 </section>
 
+<!-- FLIP animation: card selection moves card to side slot; click outside clears -->
 <script define:vars={{ PROJECTS }}>
   (function () {
     const ANIM_MS = 520;
@@ -72,6 +78,7 @@ const POSITIONS = [
     let activeProject = null;
     const homeMap = new WeakMap();
 
+    /** FLIP: animate from first rect to last rect (collage -> slot or back) */
     function animateFLIP(node, firstRect, lastRect, fromRotDeg, toRotDeg) {
       const dx = firstRect.left - lastRect.left;
       const dy = firstRect.top - lastRect.top;
@@ -167,6 +174,7 @@ const POSITIONS = [
     window.__projectsClearSelection = clearSelection;
   })();
 </script>
+<!-- Tab switch Projects | Case Study + Rough Notation on tab buttons -->
 <script is:inline>
   (function () {
     var content = document.querySelector(".projects-content");
@@ -242,16 +250,17 @@ const POSITIONS = [
 </script>
 
 <style>
+  /* Alias global theme so this section stays consistent with site theme */
   .projects-section {
-    --projects-bg: #fbfbfb;
-    --projects-ink: #0a0a0a;
-    --projects-muted: rgba(0, 0, 0, 0.65);
-    --projects-line: rgba(0, 0, 0, 0.2);
-    --projects-paper: #ffffff;
-    --projects-shadow-1: 0 18px 35px rgba(0, 0, 0, 0.18);
-    --projects-shadow-2: 0 45px 90px rgba(0, 0, 0, 0.13);
-    --projects-radius: 18px;
-    --projects-radius-lg: 22px;
+    --projects-bg: var(--color-bg);
+    --projects-ink: var(--color-ink);
+    --projects-muted: var(--color-muted);
+    --projects-line: var(--color-line);
+    --projects-paper: var(--color-paper);
+    --projects-shadow-1: var(--shadow-1);
+    --projects-shadow-2: var(--shadow-2);
+    --projects-radius: var(--radius);
+    --projects-radius-lg: var(--radius-lg);
     background: var(--projects-bg);
     color: var(--projects-ink);
     font-family: "Courier Prime", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
