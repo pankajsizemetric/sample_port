@@ -51,11 +51,9 @@
 		backface-visibility: hidden;
 	}
 
-	/* Scrim: strong left so text is always readable over video; video position untouched */
 	#hero-scrim {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(105deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.5) 32%, rgba(0, 0, 0, 0.2) 55%, transparent 72%);
 		pointer-events: none;
 	}
 
@@ -82,28 +80,11 @@
 		font-size: 1rem;
 		font-weight: 600;
 		letter-spacing: 0.02em;
-		color: #fff;
+		color: #0a0a0a;
 	}
 
 	#hero-main {
 		max-width: 26rem;
-		animation: hero-main-in 0.55s ease-out both;
-	}
-
-	@keyframes hero-main-in {
-		from {
-			opacity: 0;
-			transform: translateY(6px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		#hero-main {
-			animation: none;
-		}
 	}
 
 	.hero-label {
@@ -112,7 +93,7 @@
 		font-weight: 500;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
-		color: rgba(255, 255, 255, 0.78);
+		color: #0a0a0a;
 	}
 
 	.hero-headline {
@@ -121,14 +102,14 @@
 		font-weight: 600;
 		line-height: 1.15;
 		letter-spacing: -0.025em;
-		color: #fff;
+		color: #0a0a0a;
 	}
 
 	.hero-description {
 		margin: 0 0 1.625rem 0;
 		font-size: 0.9375rem;
 		line-height: 1.65;
-		color: rgba(255, 255, 255, 0.88);
+		color: #0a0a0a;
 	}
 
 	.hero-actions {
@@ -148,35 +129,21 @@
 		text-decoration: none;
 		border-radius: 0.375rem;
 		cursor: pointer;
-		transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
-	}
-	.btn:focus-visible {
-		outline: 2px solid #fff;
-		outline-offset: 3px;
 	}
 
 	.btn-primary {
 		background: #fff;
 		color: #0a0a0a;
-		border: none;
-	}
-	.btn-primary:hover {
-		transform: translateY(-1px);
-		background: rgba(255, 255, 255, 0.98);
+		border: 1px solid #0a0a0a;
 	}
 
 	.btn-secondary {
 		background: transparent;
-		color: #fff;
-		border: 1px solid rgba(255, 255, 255, 0.5);
-	}
-	.btn-secondary:hover {
-		border-color: rgba(255, 255, 255, 0.75);
-		background: rgba(255, 255, 255, 0.06);
-		color: #fff;
+		color: #0a0a0a;
+		border: 1px solid #0a0a0a;
 	}
 
-	/* Mobile: head space + a bit zoomed out (~80% scale) */
+	/* Mobile: top row — Pankaj Sharma (left), Python Developer block (right); video unchanged underneath */
 	@media screen and (max-width: 768px) {
 		#container {
 			background: rgb(251, 251, 251);
@@ -191,15 +158,23 @@
 			transform: translate(-50%, -45%) scale(0.8);
 			transform-origin: center center;
 		}
-		#hero-scrim {
-			background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 40%, rgba(0, 0, 0, 0.78) 100%);
-		}
 		#hero-content {
-			justify-content: flex-end;
-			padding-bottom: clamp(2rem, 8vw, 3rem);
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: space-between;
+			align-items: flex-start;
+			padding: clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 1.5rem);
+			gap: 1rem;
+		}
+		#hero-identity {
+			position: static;
 		}
 		#hero-main {
-			max-width: none;
+			max-width: 52%;
+			text-align: right;
+		}
+		#hero-main .hero-actions {
+			justify-content: flex-end;
 		}
 		.hero-headline {
 			font-size: clamp(1.5rem, 6vw, 2rem);
