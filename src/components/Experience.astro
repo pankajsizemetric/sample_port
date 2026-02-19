@@ -1,6 +1,6 @@
 ---
 /**
- * Experience — Experience | Work tabs (same UI as Projects/Skills). Content TBD.
+ * Experience — Experience | Work tabs (same UI as Projects/Skills). Empty canvas for now.
  */
 ---
 
@@ -10,6 +10,23 @@
       <button type="button" class="experience-tab-btn is-active" role="tab" aria-selected="true" data-view="experience">Experience</button>
       <span class="experience-tabs-sep" aria-hidden="true">|</span>
       <button type="button" class="experience-tab-btn" role="tab" aria-selected="false" data-view="work">Work</button>
+    </div>
+    <div class="experience-content">
+      <div class="experience-draw-wrap">
+        <div class="experience-draw-toolbar" role="toolbar" aria-label="Drawing tools">
+          <p class="experience-draw-hint">Click and move to draw. Double-click to end a line.</p>
+          <div class="experience-draw-buttons">
+            <button type="button" class="experience-draw-btn is-active" data-tool="draw" title="Freeform draw">Draw</button>
+            <button type="button" class="experience-draw-btn" data-tool="eraser" title="Eraser">Eraser</button>
+            <button type="button" class="experience-draw-btn" data-tool="clear" title="Clear drawing">Clear</button>
+            <button type="button" class="experience-draw-btn" data-tool="png" title="Save as PNG">PNG</button>
+            <button type="button" class="experience-draw-btn" data-tool="svg" title="Save as SVG">SVG</button>
+          </div>
+        </div>
+        <div class="experience-draw-area">
+          <canvas id="experienceDrawCanvas" class="experience-draw-canvas" width="1199" height="799" aria-label="Drawing layer"></canvas>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -62,6 +79,193 @@
   })();
 </script>
 
+<!-- Drawing: default SVG + canvas overlay; draw, eraser, clear, save SVG/PNG -->
+<script is:inline>
+  (function () {
+    var canvas = document.getElementById("experienceDrawCanvas");
+    var wrap = document.querySelector(".experience-draw-wrap");
+    if (!canvas || !wrap) return;
+
+    var ctx = canvas.getContext("2d");
+    var paths = [];
+    var currentPath = null;
+    var currentTool = "draw";
+    var isDrawing = false;
+    var strokeColor = "#000000";
+    var backgroundColor = "#ffffff";
+    var strokeWidth = 2;
+    var eraserWidth = 24;
+
+    function fillBackground() {
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    fillBackground();
+
+    function getPos(e) {
+      var rect = canvas.getBoundingClientRect();
+      var scaleX = canvas.width / rect.width;
+      var scaleY = canvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
+    function redraw() {
+      fillBackground();
+      paths.forEach(function (p) {
+        if (p.points.length < 2) return;
+        if (p.tool === "eraser") {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.strokeStyle = backgroundColor;
+          ctx.lineWidth = eraserWidth;
+          ctx.lineCap = "round";
+        } else {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.strokeStyle = p.color || strokeColor;
+          ctx.lineWidth = p.width || strokeWidth;
+          ctx.lineCap = "round";
+        }
+        ctx.beginPath();
+        ctx.moveTo(p.points[0].x, p.points[0].y);
+        for (var i = 1; i < p.points.length; i++) {
+          ctx.lineTo(p.points[i].x, p.points[i].y);
+        }
+        ctx.stroke();
+      });
+      ctx.globalCompositeOperation = "source-over";
+    }
+
+    function startPath(p) {
+      currentPath = { tool: currentTool, color: strokeColor, width: strokeWidth, points: [p] };
+      paths.push(currentPath);
+    }
+
+    function addPoint(p) {
+      if (!currentPath) return;
+      currentPath.points.push(p);
+      if (currentPath.tool === "eraser") {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.strokeStyle = backgroundColor;
+        ctx.lineWidth = eraserWidth;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        if (currentPath.points.length >= 2) {
+          var last = currentPath.points[currentPath.points.length - 2];
+          ctx.moveTo(last.x, last.y);
+          ctx.lineTo(p.x, p.y);
+        }
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = strokeWidth;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        if (currentPath.points.length >= 2) {
+          var last = currentPath.points[currentPath.points.length - 2];
+          ctx.moveTo(last.x, last.y);
+          ctx.lineTo(p.x, p.y);
+        }
+        ctx.stroke();
+      }
+    }
+
+    function endPath() {
+      currentPath = null;
+    }
+
+    function onPointerDown(e) {
+      e.preventDefault();
+      if (currentTool === "clear") return;
+      var p = getPos(e);
+      isDrawing = true;
+      startPath(p);
+      if (currentPath.tool === "eraser") {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.fillStyle = backgroundColor;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, eraserWidth / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = strokeColor;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, strokeWidth / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function onPointerMove(e) {
+      if (!isDrawing || !currentPath) return;
+      e.preventDefault();
+      addPoint(getPos(e));
+    }
+
+    function onPointerUp(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+      endPath();
+      isDrawing = false;
+    }
+
+    canvas.addEventListener("mousedown", onPointerDown);
+    canvas.addEventListener("mousemove", onPointerMove);
+    canvas.addEventListener("mouseup", onPointerUp);
+    canvas.addEventListener("mouseleave", onPointerUp);
+    canvas.addEventListener("dblclick", function (e) {
+      e.preventDefault();
+      endPath();
+      isDrawing = false;
+    });
+
+    wrap.querySelectorAll(".experience-draw-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var tool = this.getAttribute("data-tool");
+        if (tool === "clear") {
+          paths = [];
+          redraw();
+          return;
+        }
+        if (tool === "png") {
+          var a = document.createElement("a");
+          a.download = "experience-drawing.png";
+          a.href = canvas.toDataURL("image/png");
+          a.click();
+          return;
+        }
+        if (tool === "svg") {
+          var w = canvas.width, h = canvas.height;
+          var svg = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '">'];
+          paths.forEach(function (p) {
+            if (p.points.length < 2) return;
+            var d = "M " + p.points[0].x + " " + p.points[0].y;
+            for (var i = 1; i < p.points.length; i++) {
+              d += " L " + p.points[i].x + " " + p.points[i].y;
+            }
+            var stroke = p.tool === "eraser" ? "none" : (p.color || strokeColor);
+            var sw = p.tool === "eraser" ? 0 : (p.width || strokeWidth);
+            if (p.tool !== "eraser") {
+              svg.push('<path fill="none" stroke="' + stroke + '" stroke-width="' + sw + '" stroke-linecap="round" d="' + d + '"/>');
+            }
+          });
+          svg.push("</svg>");
+          var a = document.createElement("a");
+          a.download = "experience-drawing.svg";
+          a.href = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.join(""));
+          a.click();
+          return;
+        }
+        currentTool = tool;
+        wrap.querySelectorAll(".experience-draw-btn").forEach(function (b) {
+          b.classList.toggle("is-active", b === btn && (tool === "draw" || tool === "eraser"));
+        });
+        var toolNameEl = document.getElementById("experienceToolName");
+        if (toolNameEl) toolNameEl.textContent = tool === "draw" ? "Freeform Lines" : tool === "eraser" ? "Eraser" : toolNameEl.textContent;
+      });
+    });
+  })();
+</script>
+
 <style>
   .experience-section {
     background: var(--color-paper);
@@ -109,5 +313,79 @@
     font-size: 0.875rem;
     font-family: inherit;
     user-select: none;
+  }
+
+  .experience-content {
+    margin-top: 1rem;
+  }
+
+  .experience-draw-wrap {
+    border: 1px solid var(--color-line, #ddd);
+    border-radius: 4px;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  .experience-draw-toolbar {
+    padding: 0.5rem 0.75rem;
+    background: #ffffff;
+    color: #111;
+    font-size: 0.8125rem;
+  }
+
+  .experience-draw-tool-label {
+    font-weight: 600;
+  }
+
+  .experience-draw-hint {
+    margin: 0.25rem 0 0.5rem;
+    color: #444;
+    font-size: 0.75rem;
+  }
+
+  .experience-draw-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .experience-draw-btn {
+    font-family: inherit;
+    font-size: 0.8125rem;
+    padding: 0.35rem 0.6rem;
+    background: #f5f5f5;
+    color: #111;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .experience-draw-btn:hover {
+    background: #eee;
+  }
+
+  .experience-draw-btn.is-active {
+    background: #e0e0e0;
+    border-color: #999;
+  }
+
+  .experience-draw-area {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1199 / 799;
+    max-width: 100%;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  .experience-draw-canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    touch-action: none;
   }
 </style>
