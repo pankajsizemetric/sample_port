@@ -7,11 +7,11 @@
 
 <section class="skills-section" id="skills" aria-label="Skills">
   <div class="skills-page">
-    <div class="skills-tabs" role="tablist" aria-label="Skills view">
-      <button type="button" class="skills-tab-btn is-active" role="tab" aria-selected="true" data-view="view-1">Overview</button>
-      <span class="skills-tabs-sep" aria-hidden="true">|</span>
-      <button type="button" class="skills-tab-btn" role="tab" aria-selected="false" data-view="view-2">Details</button>
-    </div>
+      <div class="skills-tabs" role="tablist" aria-label="Skills view">
+        <button type="button" class="skills-tab-btn is-active" role="tab" aria-selected="true" data-view="view-1">Overview</button>
+        <span class="skills-tabs-sep" aria-hidden="true">|</span>
+        <button type="button" class="skills-tab-btn" role="tab" aria-selected="false" data-view="view-2">Details</button>
+      </div>
     <div class="skills-content" data-active-view="view-1">
       <div class="skills-view skills-view-1" id="skillsView1" aria-hidden="false">
     <!-- Mobile: vertical (TB) -->
@@ -172,6 +172,93 @@ gitGraph LR:
     }, 50);
   })();
 </script>
+<!-- All commits: red dots + click -> console.log. Branch labels: click -> console.log. -->
+<script is:inline>
+  (function () {
+    var BRANCH_LABELS = ["main", "Services", "API_Design", "Integrations", "Auth_Identity", "Data_Storage", "Distributed", "Cloud_DevOps"];
+
+    function getTextContent(el) {
+      return (el.textContent || "").trim().replace(/\s+/g, " ");
+    }
+
+    function findCircleForLabel(svg, textEl) {
+      try {
+        var bbox = textEl.getBBox();
+        var tx = bbox.x + bbox.width / 2;
+        var ty = bbox.y + bbox.height / 2;
+        var circles = svg.querySelectorAll("circle");
+        var best = null;
+        var bestDist = Infinity;
+        for (var i = 0; i < circles.length; i++) {
+          var c = circles[i];
+          var r = parseFloat(c.getAttribute("r")) || 0;
+          if (r < 2 || r > 25) continue;
+          var cx = parseFloat(c.getAttribute("cx")) || 0;
+          var cy = parseFloat(c.getAttribute("cy")) || 0;
+          var dist = (cx - tx) * (cx - tx) + (cy - ty) * (cy - ty);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = c;
+          }
+        }
+        return best;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function attachRedDotsAndClick() {
+      var mermaidSvgs = document.querySelectorAll(".skills-section .mermaid svg");
+      mermaidSvgs.forEach(function (svg) {
+        var usedCircles = new Set();
+        var texts = svg.querySelectorAll("text");
+        texts.forEach(function (textEl) {
+          var label = getTextContent(textEl);
+          if (!label) return;
+          if (BRANCH_LABELS.indexOf(label) !== -1) {
+            var g = textEl.closest("g");
+            var target = g || textEl;
+            target.style.cursor = "pointer";
+            (function (branchName) {
+              target.addEventListener("click", function () {
+                console.log("Branch clicked:", branchName);
+              });
+            })(label);
+            return;
+          }
+          var circle = findCircleForLabel(svg, textEl);
+          if (!circle || usedCircles.has(circle)) return;
+          usedCircles.add(circle);
+          circle.setAttribute("fill", "red");
+          circle.setAttribute("stroke", "red");
+          circle.style.cursor = "pointer";
+          (function (commitLabel) {
+            circle.addEventListener("click", function () {
+              console.log("Commit clicked:", commitLabel);
+            });
+          })(label);
+          var g = textEl.closest("g");
+          if (g) g.style.cursor = "pointer";
+        });
+      });
+    }
+
+    function waitForMermaidThenRun() {
+      var svg = document.querySelector(".skills-section .mermaid svg");
+      if (svg && svg.querySelector("circle")) {
+        attachRedDotsAndClick();
+        return true;
+      }
+      return false;
+    }
+
+    if (waitForMermaidThenRun()) return;
+    var tries = 0;
+    var t = setInterval(function () {
+      if (waitForMermaidThenRun() || ++tries > 80) clearInterval(t);
+    }, 100);
+  })();
+</script>
 <!-- Tab switch Overview | Details + Rough Notation on tab buttons -->
 <script is:inline>
   (function () {
@@ -259,6 +346,7 @@ gitGraph LR:
   }
 
   .skills-page {
+    position: relative;
     max-width: 1200px;
     margin: 0 auto;
     padding: 18px 18px 42px;
