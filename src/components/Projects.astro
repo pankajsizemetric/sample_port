@@ -248,6 +248,44 @@ const POSITIONS = [
     }
   })();
 </script>
+<!-- Mouse-aware hover shadow on cards: shadow appears immediately on hover, follows cursor, very fast transition -->
+<script is:inline>
+  (function () {
+    var cards = document.querySelectorAll(".projects-section .card");
+    var shadowBlur = 12;
+    var shadowSpread = 8;
+    var shadowIntensity = 0.08;
+    cards.forEach(function (card) {
+      function setShadow(px, py) {
+        card.style.boxShadow = px + "px " + py + "px " + shadowBlur + "px rgba(0,0,0," + shadowIntensity + ")";
+      }
+      function clearShadow() {
+        card.style.boxShadow = "";
+      }
+      card.addEventListener("mouseenter", function (e) {
+        card.addEventListener("mousemove", onMove);
+        var rect = card.getBoundingClientRect();
+        var x = (e.clientX - rect.left) / rect.width;
+        var y = (e.clientY - rect.top) / rect.height;
+        var px = (x - 0.5) * shadowSpread;
+        var py = (y - 0.5) * shadowSpread;
+        setShadow(px, py);
+      });
+      card.addEventListener("mouseleave", function () {
+        card.removeEventListener("mousemove", onMove);
+        clearShadow();
+      });
+      function onMove(e) {
+        var rect = card.getBoundingClientRect();
+        var x = (e.clientX - rect.left) / rect.width;
+        var y = (e.clientY - rect.top) / rect.height;
+        var px = (x - 0.5) * shadowSpread;
+        var py = (y - 0.5) * shadowSpread;
+        setShadow(px, py);
+      }
+    });
+  })();
+</script>
 
 <style>
   /* Alias global theme so this section stays consistent with site theme */
@@ -257,8 +295,6 @@ const POSITIONS = [
     --projects-muted: var(--color-muted);
     --projects-line: var(--color-line);
     --projects-paper: var(--color-paper);
-    --projects-shadow-1: var(--shadow-1);
-    --projects-shadow-2: var(--shadow-2);
     --projects-radius: var(--radius);
     --projects-radius-lg: var(--radius-lg);
     background: var(--projects-bg);
@@ -266,7 +302,10 @@ const POSITIONS = [
     font-family: "Courier Prime", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     letter-spacing: 0.2px;
     padding-top: clamp(2.5rem, 6vw, 4rem);
+    padding-bottom: clamp(3rem, 8vw, 5rem);
     overflow-x: hidden;
+    overflow-y: hidden;
+    min-height: 85vh;
   }
 
   .projects-page {
@@ -337,7 +376,7 @@ const POSITIONS = [
 
   .projects-left {
     position: relative;
-    min-height: 560px;
+    min-height: 620px;
     padding-right: 10px;
   }
 
@@ -372,8 +411,8 @@ const POSITIONS = [
     position: relative;
     width: 100%;
     max-width: 520px;
-    height: min(520px, 60vh);
-    min-height: 460px;
+    height: min(560px, 62vh);
+    min-height: 500px;
     margin-top: 6px;
     margin-left: 8px;
     transform-style: preserve-3d;
@@ -385,14 +424,14 @@ const POSITIONS = [
     min-height: 120px;
     aspect-ratio: 16 / 10;
     border-radius: var(--projects-radius-lg);
-    border: 2px solid var(--projects-ink);
+    border: 1px solid rgba(0, 0, 0, 0.12);
     background: var(--projects-paper);
     overflow: hidden;
-    box-shadow: var(--projects-shadow-1);
     cursor: pointer;
     z-index: 1;
     transform-origin: 20% 20%;
-    transition: transform 220ms ease, box-shadow 220ms ease;
+    transition: transform 220ms ease, box-shadow 60ms ease;
+    outline: none;
     display: flex;
     flex-direction: column;
   }
@@ -411,7 +450,7 @@ const POSITIONS = [
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.8px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     color: var(--projects-ink);
   }
 
@@ -428,13 +467,11 @@ const POSITIONS = [
 
   .projects-section .card:hover {
     transform: translate3d(0, -6px, 10px) scale(1.01) rotate(var(--rot));
-    box-shadow: 0 26px 55px rgba(0, 0, 0, 0.22);
+    outline: none;
   }
 
   .projects-section .card.is-active {
-    outline: 3px solid var(--projects-ink);
-    outline-offset: 3px;
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.25);
+    outline: none;
   }
 
   @media (max-width: 980px) {
